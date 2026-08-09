@@ -5,7 +5,7 @@
 
 local function CheckVersion()
     local version = "2.0"
-    local latest = game:HttpGet("https://raw.githubusercontent.com/KanzTHub/KanzTHub/main/version.txt")
+    local latest = game:HttpGet("https://raw.githubusercontent.com/kanzzit/KanzTHub/main/version.txt")
     if latest ~= version then
         return true
     end
@@ -17,7 +17,7 @@ local function LoadHub()
     local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/addons/ThemeManager.lua"))()
     local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/addons/SaveManager.lua"))()
     
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/KanzTHub/KanzTHub/main/main.lua"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/kanzzit/KanzTHub/main/main.lua"))()
 end
 
 local LoadingGui = Instance.new("ScreenGui")
