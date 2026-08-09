@@ -1,90 +1,242 @@
 -- ========================================
 -- 🔥 KANZTHUB 🔥
--- Loader v2.0
+-- Loader v2.0 (Fix for Delta)
 -- ========================================
 
-local function CheckVersion()
-    local version = "2.0"
-    local latest = game:HttpGet("https://raw.githubusercontent.com/kanzzit/KanzTHub/main/version.txt")
-    if latest ~= version then
-        return true
+-- Cek double load
+if getgenv().KanzTHub_Loaded then
+    return
+end
+getgenv().KanzTHub_Loaded = true
+
+-- Load Obsidian UI
+local repo = 'https://raw.githubusercontent.com/deividcomsono/Obsidian/main/'
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+
+-- Variables
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+local TeleportService = game:GetService("TeleportService")
+local Lighting = game:GetService("Lighting")
+
+-- Notifikasi
+Library:Notify("🔥 KanzTHub v2.0 Loaded!", 5)
+
+-- Window
+local Window = Library:CreateWindow({
+    Title = 'KanzTHub',
+    Footer = 'by KanzTHub 🚀',
+    ShowCustomCursor = true,
+    Center = true,
+    AutoShow = true,
+    TabPadding = 8,
+    MenuFadeTime = 0.2
+})
+
+-- Tabs
+local Tabs = {
+    Main = Window:AddTab('Main', 'home'),
+    Combat = Window:AddTab('Combat', 'sword'),
+    Visual = Window:AddTab('Visual', 'eye'),
+    Misc = Window:AddTab('Misc', 'settings'),
+    Credits = Window:AddTab('Credits', 'star')
+}
+
+-- Fitur variables
+local autoFarmEnabled = false
+local godModeEnabled = false
+local espEnabled = false
+local antiAfkEnabled = false
+
+-- ========== TAB: MAIN ==========
+local MainTab = Tabs.Main
+local PlayerGroup = MainTab:AddLeftGroupbox('Player Settings')
+
+PlayerGroup:AddToggle('SpeedBoost', {
+    Text = 'Speed Boost x10',
+    Default = false,
+    Callback = function(val)
+        if val and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 50
+        elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
     end
-    return false
-end
+})
 
-local function LoadHub()
-    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/Library.lua"))()
-    local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/addons/ThemeManager.lua"))()
-    local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/deividcomsono/Obsidian/main/addons/SaveManager.lua"))()
+PlayerGroup:AddToggle('JumpBoost', {
+    Text = 'Jump Boost x5',
+    Default = false,
+    Callback = function(val)
+        if val and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = 250
+        elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = 50
+        end
+    end
+})
+
+PlayerGroup:AddButton('Infinite Yield', function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+    Library:Notify('Infinite Yield Loaded!', 3)
+end)
+
+local InfoGroup = MainTab:AddRightGroupbox('Info')
+InfoGroup:AddLabel('🚀 KanzTHub - Created by KanzTHub')
+InfoGroup:AddLabel('📌 Version: 2.0')
+InfoGroup:AddLabel('🎯 Support: Delta, Krnl, Fluxus')
+InfoGroup:AddLabel('💀 Use at your own risk!')
+
+-- ========== TAB: COMBAT ==========
+local CombatTab = Tabs.Combat
+local FarmGroup = CombatTab:AddLeftGroupbox('Auto Farm')
+
+FarmGroup:AddToggle('Auto Farm', {
+    Text = 'Auto Farm (Nearest Enemy)',
+    Default = false,
+    Callback = function(val)
+        autoFarmEnabled = val
+        Library:Notify('Auto Farm: ' .. (val and 'ON' or 'OFF'), 2)
+    end
+})
+
+local OPGroup = CombatTab:AddRightGroupbox('OP Features')
+
+OPGroup:AddToggle('God Mode', {
+    Text = 'God Mode (Immortal)',
+    Default = false,
+    Callback = function(val)
+        godModeEnabled = val
+        if val and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.MaxHealth = math.huge
+            LocalPlayer.Character.Humanoid.Health = math.huge
+            Library:Notify('🛡️ God Mode Activated!', 3)
+        end
+    end
+})
+
+-- ========== TAB: VISUAL ==========
+local VisualTab = Tabs.Visual
+local ESPGroup = VisualTab:AddLeftGroupbox('ESP')
+
+ESPGroup:AddToggle('ESP Players', {
+    Text = 'ESP Players (Name & Distance)',
+    Default = false,
+    Callback = function(val)
+        espEnabled = val
+        Library:Notify('ESP: ' .. (val and 'ON' or 'OFF'), 2)
+    end
+})
+
+local VisualFXGroup = VisualTab:AddRightGroupbox('Visual Effects')
+
+VisualFXGroup:AddToggle('Full Bright', {
+    Text = 'Full Bright',
+    Default = false,
+    Callback = function(val)
+        if val then
+            Lighting.Brightness = 10
+            Lighting.ClockTime = 12
+            Lighting.FogEnd = 100000
+        else
+            Lighting.Brightness = 0.5
+            Lighting.FogEnd = 500
+        end
+    end
+})
+
+-- ========== TAB: MISC ==========
+local MiscTab = Tabs.Misc
+local UtilGroup = MiscTab:AddRightGroupbox('Utility')
+
+UtilGroup:AddToggle('Anti AFK', {
+    Text = 'Anti AFK',
+    Default = false,
+    Callback = function(val)
+        antiAfkEnabled = val
+        if val then
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+            Library:Notify('Anti AFK Activated!', 2)
+        end
+    end
+})
+
+UtilGroup:AddButton('Rejoin Game', function()
+    TeleportService:Teleport(game.PlaceId)
+end)
+
+-- ========== TAB: CREDITS ==========
+local CreditsTab = Tabs.Credits
+local CreditsGroup = CreditsTab:AddLeftGroupbox('About KanzTHub')
+CreditsGroup:AddLabel('🌟 KanzTHub')
+CreditsGroup:AddLabel('📝 Creator: KanzTHub')
+CreditsGroup:AddLabel('🔧 Version: 2.0')
+CreditsGroup:AddLabel('💀 Use at your own risk!')
+
+-- ========== TAB: SETTINGS ==========
+local SettingsTab = Window:AddTab('Settings', 'settings')
+local MenuGroup = SettingsTab:AddLeftGroupbox('Menu Settings')
+
+MenuGroup:AddButton('Theme Manager', function()
+    ThemeManager:OpenThemeManager()
+end)
+
+MenuGroup:AddButton('Save Config', function()
+    SaveManager:Save()
+    Library:Notify('Config Saved!', 3)
+end)
+
+MenuGroup:AddButton('Load Config', function()
+    SaveManager:Load()
+    Library:Notify('Config Loaded!', 3)
+end)
+
+SaveManager:SetLibrary(Library)
+ThemeManager:SetLibrary(Library)
+
+-- ========== MAIN LOOP ==========
+RunService.Heartbeat:Connect(function()
+    if autoFarmEnabled then
+        local nearest = nil
+        local shortestDist = math.huge
+        local myPos = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character.HumanoidRootPart.Position
+        
+        if myPos then
+            for _, player in pairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local dist = (player.Character.HumanoidRootPart.Position - myPos).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        nearest = player
+                    end
+                end
+            end
+        end
+        
+        if nearest and nearest.Character and nearest.Character:FindFirstChild("HumanoidRootPart") then
+            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, nearest.Character.HumanoidRootPart.Position)
+        end
+    end
     
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/kanzzit/KanzTHub/main/main.lua"))()
-end
+    if godModeEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.MaxHealth = math.huge
+        LocalPlayer.Character.Humanoid.Health = math.huge
+    end
+    
+    if antiAfkEnabled then
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end
+end)
 
-local LoadingGui = Instance.new("ScreenGui")
-LoadingGui.Name = "KanzTHub_Loading"
-LoadingGui.Parent = game.CoreGui
-
-local LoadingFrame = Instance.new("Frame")
-LoadingFrame.Size = UDim2.new(0, 400, 0, 250)
-LoadingFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
-LoadingFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
-LoadingFrame.BorderSizePixel = 0
-LoadingFrame.Parent = LoadingGui
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Position = UDim2.new(0, 0, 0, 25)
-Title.BackgroundTransparency = 1
-Title.Text = "🔥 KanzTHub"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 32
-Title.Parent = LoadingFrame
-
-local SubTitle = Instance.new("TextLabel")
-SubTitle.Size = UDim2.new(1, 0, 0, 25)
-SubTitle.Position = UDim2.new(0, 0, 0, 80)
-SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "Loading..."
-SubTitle.TextColor3 = Color3.fromRGB(150, 150, 150)
-SubTitle.Font = Enum.Font.Gotham
-SubTitle.TextSize = 16
-SubTitle.Parent = LoadingFrame
-
-local Progress = Instance.new("Frame")
-Progress.Size = UDim2.new(0, 300, 0, 6)
-Progress.Position = UDim2.new(0.5, -150, 0, 140)
-Progress.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
-Progress.BorderSizePixel = 0
-Progress.Parent = LoadingFrame
-
-local ProgressBar = Instance.new("Frame")
-ProgressBar.Size = UDim2.new(0, 0, 1, 0)
-ProgressBar.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-ProgressBar.BorderSizePixel = 0
-ProgressBar.Parent = Progress
-
-local function UpdateProgress(percent)
-    ProgressBar.Size = UDim2.new(percent, 0, 1, 0)
-end
-
-task.wait(0.3)
-UpdateProgress(0.2)
-SubTitle.Text = "Loading UI Library..."
-task.wait(0.5)
-UpdateProgress(0.4)
-SubTitle.Text = "Loading Modules..."
-task.wait(0.5)
-UpdateProgress(0.6)
-SubTitle.Text = "Loading Config..."
-task.wait(0.5)
-UpdateProgress(0.8)
-SubTitle.Text = "Loading Features..."
-task.wait(0.5)
-UpdateProgress(1)
-SubTitle.Text = "Ready!"
-task.wait(0.3)
-
-pcall(LoadHub)
-
-LoadingGui:Destroy()
+print('[KanzTHub] Loaded Successfully!')
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "KanzTHub",
+    Text = "Loaded! Selamat bermain!",
+    Duration = 5
+})
